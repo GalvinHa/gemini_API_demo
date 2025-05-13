@@ -1,0 +1,43 @@
+import express from 'express';
+import { gemini_api_call } from './gemini_api_call.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const app = express();
+const PORT = 3000;
+
+app.use(express.json());
+app.use(express.static(path.join(__dirname, 'public')));
+
+app.get('/', (req, res) => {
+    // Only send the file once
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+app.post('/gemini', async (req, res) => {
+    try {
+        const { userQuery } = req.body;
+
+        if (!userQuery) {
+            return res.status(400).send('No query provided');
+        }
+
+        // Call your Gemini API function
+        const response = await gemini_api_call(userQuery);
+        
+        // Send the response back to the client
+        res.send(response);
+
+    } catch (error) {
+        console.error('Error calling Gemini API:', error);
+        res.status(500).send('Error processing your request: ' + error.message);
+    }
+});
+
+// Start the server
+app.listen(PORT, () => {
+    console.log(`Server is running on http://localhost:${PORT}`);
+});
